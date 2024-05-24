@@ -42,7 +42,6 @@ BOOL CCopyWSRApp::InitInstance()
 	HANDLE hMutex = CreateMutex(NULL, TRUE, L"CopyWSR");
 	if (GetLastError() == ERROR_ALREADY_EXISTS)
 	{
-		CloseHandle(hMutex);
 		MessageBox(NULL, L"Another instance of the application is already running.", L"Copy With System Rights", MB_OK);
 		// set focus to existing instance
 		HWND hWnd = FindWindow(NULL, L"Copy With System Rights");
