@@ -225,6 +225,8 @@ void CCopyWSRDlg::OnBnClickedButtonCopy()
 	CString fileName = dlg.GetFileName();
 	CString destPath = _Directory + _T("\\") + fileName;
 
+	CWaitCursor wait;
+
 	CommandWriter::writeCopyFile(filePath, destPath);
 
 	RunService();
@@ -242,6 +244,8 @@ void CCopyWSRDlg::OnBnClickedButtonDelete()
 	_FilesListBox.GetText(index, str);
 	// get the full path
 	CString fullPath = _Directory + _T("\\") + str;
+
+	CWaitCursor wait;
 
 	CommandWriter::writeDeleteFile(fullPath);
 
@@ -267,6 +271,9 @@ void CCopyWSRDlg::OnBnClickedButtonRename()
 
 	// get the new full path
 	CString newFullPath = _Directory + _T("\\") + dlg.GetNewFileName();
+
+	CWaitCursor wait;
+
 	CommandWriter::writeRenameFile(oldFullPath, newFullPath);
 
 	RunService();
@@ -302,11 +309,14 @@ void CCopyWSRDlg::OnDropFiles(HDROP hDropInfo)
 			CString fileName = sourceFilePathName.Mid(index + 1);
 			CString destPathName = _Directory + _T("\\") + fileName;
 
+			CWaitCursor wait;
+
 			CommandWriter::writeCopyFile(sourceFilePathName, destPathName);
 
 			RunService();
 			UpdateFileListBox();
 		}
 	}
+
 	CDialog::OnDropFiles(hDropInfo);
 }
