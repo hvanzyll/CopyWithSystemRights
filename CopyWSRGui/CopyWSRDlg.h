@@ -44,4 +44,6 @@ private:
 	HICON m_hIcon;
 	CString _Directory;
 	CListBox _FilesListBox;
+public:
+	afx_msg void OnBnClickedButtonRefresh();
 };
