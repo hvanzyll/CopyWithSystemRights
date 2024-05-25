@@ -1,18 +1,23 @@
 # Copy With System Rights
 
-Copies/Deletes/renames files that are permission locked by the system.
-This functionality is done by using a windows service that runs with system rights to copy/delete/rename files that are locked by the system.
+"Copy With System Rights" is a utility designed to manipulate files that are locked due to system permissions. It can copy, delete, or rename these files by leveraging a Windows service that operates with system rights.
 
-The service is embedded the in main app and is extracted and registered on running the app, and unregistered and deleted on closing the app.
+## Key Features
 
-The app works in GUI mode as well as command line mode.
-For GUI mode, run the app without any arguments.
-For command line mode, run the app with the following arguments:
+- **System Permission Bypass**: The utility can interact with files that are locked due to system permissions. Please note that it does not bypass files locked by running applications.
+- **Embedded Service**: The Windows service used by the utility is embedded within the main application. It is extracted and registered when the application runs, and unregistered and deleted when the application closes.
+- **GUI and Command Line Modes**: The application can be operated in two modes. For a graphical interface, run the application without any arguments. For command line operation, specific arguments are required.
+
+## Usage
+
+For command line mode, use the following syntax:
 ```
 Usage: CopyWSR.exe[/copy|/delete|/rename][source][destination]
 ```
-The source and destination paths should be absolute paths.
+Please ensure that the source and destination paths are absolute.
 
-The App is built using MFC/C++.
+## Development
+
+The application is developed using MFC/C++.
 
 

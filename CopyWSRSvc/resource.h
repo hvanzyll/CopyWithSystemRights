@@ -1,6 +1,6 @@
 //{{NO_DEPENDENCIES}}
 // Microsoft Visual C++ generated include file.
-// Used by FreeSpaceSvc.rc
+// Used by CopyWSRSvc.rc
 //
 #define IDC_MYICON                      2
 #define IDD_COPYWSR_DIALOG              102

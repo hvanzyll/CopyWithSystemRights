@@ -21,7 +21,8 @@ END_MESSAGE_MAP()
 
 // CCopyWSRApp construction
 
-CCopyWSRApp::CCopyWSRApp()
+CCopyWSRApp::CCopyWSRApp() :
+	_ServicePath(L"")
 {
 	// support Restart Manager
 	m_dwRestartManagerSupportFlags = AFX_RESTART_MANAGER_SUPPORT_RESTART;
@@ -138,8 +139,8 @@ BOOL CCopyWSRApp::Process()
 		}
 		else
 		{
-			CString out = L"Usage: CopyWSR.exe[/copy | /delete | /rename][source][destination]\n";
-			MessageBox(NULL, out, L"Copy With System Rights", MB_OK);
+			CString out = L"Usage: CopyWSR.exe[/copy|/delete|/rename][source][destination]\n";
+			MessageBox(NULL, out, L"Copy With System Rights CLI Arguments", MB_OK);
 		}
 	}
 

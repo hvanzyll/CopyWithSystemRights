@@ -23,5 +23,6 @@ protected:
 
 	DECLARE_MESSAGE_MAP()
 
+private:
 	CString _NewFileName;
 };

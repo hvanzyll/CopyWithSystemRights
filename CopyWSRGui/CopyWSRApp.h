@@ -27,9 +27,11 @@ protected:
 	// Implementation
 
 	DECLARE_MESSAGE_MAP()
+
 	BOOL Process();
 	CString GetServicePath();
 
+private:
 	CString _ServicePath;
 };
 

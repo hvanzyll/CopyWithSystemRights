@@ -6,6 +6,10 @@
 #include "CopyWSRDlg.h"
 #include "CommandWriter.h"
 #include "NewFileNameDlg.h"
+#include "CLIUsageDlg.h"
+
+#pragma comment(lib, "Version.lib")
+
 #ifdef _DEBUG
 #define new DEBUG_NEW
 #endif
@@ -46,7 +50,7 @@ END_MESSAGE_MAP()
 
 CCopyWSRDlg::CCopyWSRDlg(CWnd* pParent /*=nullptr*/)
 	: CDialogEx(IDD_COPYWSRGUI_DIALOG, pParent)
-	, _Directory(_T("R:\\Debug"))
+	, _Directory(_T(""))
 {
 	m_hIcon = AfxGetApp()->LoadIcon(IDR_MAINFRAME);
 }
@@ -74,20 +78,63 @@ END_MESSAGE_MAP()
 BOOL CCopyWSRDlg::OnInitDialog()
 {
 	CDialogEx::OnInitDialog();
+
+	// add the ability to drag and drop files into the dialog
 	ChangeWindowMessageFilter(0x0049, MSGFLT_ADD);
 	ChangeWindowMessageFilter(WM_DROPFILES, MSGFLT_ADD);
 	CDialog::DragAcceptFiles();
 
-	// Add "About..." menu item to system menu.
+	AddMenuItems();
+	UpdateTitleWithVersion();
 
-	// IDM_ABOUTBOX must be in the system command range.
-	ASSERT((IDM_ABOUTBOX & 0xFFF0) == IDM_ABOUTBOX);
-	ASSERT(IDM_ABOUTBOX < 0xF000);
+	// Set the icon for this dialog.  The framework does this automatically
+	//  when the application's main window is not a dialog
+	SetIcon(m_hIcon, TRUE);			// Set big icon
+	SetIcon(m_hIcon, FALSE);		// Set small icon
+
+	// create default column for the list control
+	CListCtrl* pList = (CListCtrl*)GetDlgItem(IDC_LIST_FILES);
+	pList->InsertColumn(0, _T("File Name"), LVCFMT_LEFT, 200);
+
+	UpdateFileListBox();
+
+	return TRUE;  // return TRUE  unless you set the focus to a control
+}
+
+void CCopyWSRDlg::UpdateTitleWithVersion()
+{
+	CString strVersion = GetFileVersionOfApplication();
+	if (!strVersion.IsEmpty())
+	{
+		CString strTitle;
+		GetWindowText(strTitle);
+		strTitle += _T(" (v") + strVersion + _T(")");
+		SetWindowText(strTitle);
+	}
+}
+
+void CCopyWSRDlg::AddMenuItems()
+{
+	// Add "About..." menu item to system menu.
 
 	CMenu* pSysMenu = GetSystemMenu(FALSE);
 	if (pSysMenu != nullptr)
 	{
-		BOOL bNameValid;
+		CString strCLIMenu;
+		BOOL bNameValid = strCLIMenu.LoadString(IDS_CLI_BOX);
+		ASSERT(bNameValid);
+
+		ASSERT((IDM_CLI_BOX & 0xFFF0) == IDM_CLI_BOX);
+		ASSERT(IDM_CLI_BOX < 0xF000);
+		if (!strCLIMenu.IsEmpty())
+		{
+			pSysMenu->AppendMenu(MF_SEPARATOR);
+			pSysMenu->AppendMenu(MF_STRING, IDM_CLI_BOX, strCLIMenu);
+		}
+
+		// IDM_ABOUTBOX must be in the system command range.
+		ASSERT((IDM_ABOUTBOX & 0xFFF0) == IDM_ABOUTBOX);
+		ASSERT(IDM_ABOUTBOX < 0xF000);
 		CString strAboutMenu;
 		bNameValid = strAboutMenu.LoadString(IDS_ABOUTBOX);
 		ASSERT(bNameValid);
@@ -97,25 +144,40 @@ BOOL CCopyWSRDlg::OnInitDialog()
 			pSysMenu->AppendMenu(MF_STRING, IDM_ABOUTBOX, strAboutMenu);
 		}
 	}
+}
 
-	// Set the icon for this dialog.  The framework does this automatically
-	//  when the application's main window is not a dialog
-	SetIcon(m_hIcon, TRUE);			// Set big icon
-	SetIcon(m_hIcon, FALSE);		// Set small icon
+CString CCopyWSRDlg::GetFileVersionOfApplication()
+{
+	TCHAR szFileName[MAX_PATH] = { 0 };
+	DWORD dwLen = GetModuleFileName(NULL, szFileName, MAX_PATH);
+	if (dwLen == 0)
+		return _T("");
 
-	// create default column for the list control
-	// get the list control
-	CListCtrl* pList = (CListCtrl*)GetDlgItem(IDC_LIST_FILES);
-	// insert the first column
-	pList->InsertColumn(0, _T("File Name"), LVCFMT_LEFT, 200);
+	DWORD dwDummy = 0;
+	DWORD dwFVISize = GetFileVersionInfoSize(szFileName, &dwDummy);
 
-	// set default directory
-	/*CEdit* pEdit = (CEdit*)GetDlgItem(IDC_EDIT_DIRECTORY);
-	pEdit->SetWindowText(_T("D:\\Harry_Code\\GitHub\\CopyWithSystemRights"));*/
+	LPBYTE lpVersionInfo = new BYTE[dwFVISize];
 
-	UpdateFileListBox();
+	GetFileVersionInfo(szFileName, 0, dwFVISize, lpVersionInfo);
 
-	return TRUE;  // return TRUE  unless you set the focus to a control
+	UINT uLen = 0;
+	VS_FIXEDFILEINFO* lpFfi = nullptr;
+	VerQueryValue(lpVersionInfo, _T("\\"), (LPVOID*)&lpFfi, &uLen);
+
+	DWORD dwFileVersionMS = lpFfi->dwFileVersionMS;
+	DWORD dwFileVersionLS = lpFfi->dwFileVersionLS;
+
+	delete[] lpVersionInfo;
+
+	DWORD dwLeftMost = HIWORD(dwFileVersionMS);
+	DWORD dwSecondLeft = LOWORD(dwFileVersionMS);
+	DWORD dwSecondRight = HIWORD(dwFileVersionLS);
+	DWORD dwRightMost = LOWORD(dwFileVersionLS);
+
+	CString str;
+	str.Format(L"%d.%d.%d.%d\n", dwLeftMost, dwSecondLeft, dwSecondRight, dwRightMost);
+
+	return str;
 }
 
 void CCopyWSRDlg::OnSysCommand(UINT nID, LPARAM lParam)
@@ -124,6 +186,11 @@ void CCopyWSRDlg::OnSysCommand(UINT nID, LPARAM lParam)
 	{
 		CAboutDlg dlgAbout;
 		dlgAbout.DoModal();
+	}
+	if ((nID & 0xFFF0) == IDM_CLI_BOX)
+	{
+		CLIUsageDlg dlgUsage;
+		dlgUsage.DoModal();
 	}
 	else
 	{
@@ -178,6 +245,8 @@ void CCopyWSRDlg::UpdateFileListBox()
 
 	// clear the list box
 	_FilesListBox.ResetContent();
+	if (_Directory.IsEmpty())
+		return;
 
 	// get the first file in the directory
 	CString strFile = _Directory + _T("\\*.*");
