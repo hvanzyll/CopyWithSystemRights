@@ -71,6 +71,7 @@ BEGIN_MESSAGE_MAP(CCopyWSRDlg, CDialogEx)
 	ON_BN_CLICKED(IDC_BUTTON_DELETE, &CCopyWSRDlg::OnBnClickedButtonDelete)
 	ON_BN_CLICKED(IDC_BUTTON_RENAME, &CCopyWSRDlg::OnBnClickedButtonRename)
 	ON_WM_DROPFILES()
+	ON_BN_CLICKED(IDC_BUTTON_REFRESH, &CCopyWSRDlg::OnBnClickedButtonRefresh)
 END_MESSAGE_MAP()
 
 // CCopyWSRDlg message handlers
@@ -388,4 +389,9 @@ void CCopyWSRDlg::OnDropFiles(HDROP hDropInfo)
 	}
 
 	CDialog::OnDropFiles(hDropInfo);
+}
+
+void CCopyWSRDlg::OnBnClickedButtonRefresh()
+{
+	UpdateFileListBox();
 }
