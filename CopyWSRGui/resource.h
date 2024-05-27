@@ -22,8 +22,11 @@
 #define IDC_EDIT_NEW_FILE_NAME          1007
 #define IDC_BUTTON_REFRESH              1007
 #define IDC_MFCLINK_EMAIL               1008
+#define IDC_MFCLINK_PROJECT             1008
+#define IDC_MFCLINK_MIT                 1008
 #define IDC_STATINAME_VERSION           1009
 #define IDC_STATIC_NAME_VERSION         1009
+#define IDC_MFCLINK_PROJECT2            1010
 
 // Next default values for new objects
 // 
