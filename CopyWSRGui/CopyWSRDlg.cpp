@@ -7,6 +7,7 @@
 #include "CommandWriter.h"
 #include "NewFileNameDlg.h"
 #include "CLIUsageDlg.h"
+#include "AboutDlg.h"
 
 #pragma comment(lib, "Version.lib")
 
@@ -15,36 +16,6 @@
 #endif
 
 // CAboutDlg dialog used for App About
-
-class CAboutDlg : public CDialogEx
-{
-public:
-	CAboutDlg();
-
-	// Dialog Data
-#ifdef AFX_DESIGN_TIME
-	enum { IDD = IDD_ABOUTBOX };
-#endif
-
-protected:
-	virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV support
-
-	// Implementation
-protected:
-	DECLARE_MESSAGE_MAP()
-};
-
-CAboutDlg::CAboutDlg() : CDialogEx(IDD_ABOUTBOX)
-{
-}
-
-void CAboutDlg::DoDataExchange(CDataExchange* pDX)
-{
-	CDialogEx::DoDataExchange(pDX);
-}
-
-BEGIN_MESSAGE_MAP(CAboutDlg, CDialogEx)
-END_MESSAGE_MAP()
 
 // CCopyWSRDlg dialog
 
@@ -104,12 +75,13 @@ BOOL CCopyWSRDlg::OnInitDialog()
 
 void CCopyWSRDlg::UpdateTitleWithVersion()
 {
-	CString strVersion = GetFileVersionOfApplication();
-	if (!strVersion.IsEmpty())
+	CCopyWSRApp* pApp = (CCopyWSRApp*)AfxGetApp();
+	CString version = pApp->GetFileVersionOfApplication();
+	if (!version.IsEmpty())
 	{
 		CString strTitle;
 		GetWindowText(strTitle);
-		strTitle += _T(" (v") + strVersion + _T(")");
+		strTitle += _T(" (v:") + version + _T(")");
 		SetWindowText(strTitle);
 	}
 }
@@ -145,40 +117,6 @@ void CCopyWSRDlg::AddMenuItems()
 			pSysMenu->AppendMenu(MF_STRING, IDM_ABOUTBOX, strAboutMenu);
 		}
 	}
-}
-
-CString CCopyWSRDlg::GetFileVersionOfApplication()
-{
-	TCHAR szFileName[MAX_PATH] = { 0 };
-	DWORD dwLen = GetModuleFileName(NULL, szFileName, MAX_PATH);
-	if (dwLen == 0)
-		return _T("");
-
-	DWORD dwDummy = 0;
-	DWORD dwFVISize = GetFileVersionInfoSize(szFileName, &dwDummy);
-
-	LPBYTE lpVersionInfo = new BYTE[dwFVISize];
-
-	GetFileVersionInfo(szFileName, 0, dwFVISize, lpVersionInfo);
-
-	UINT uLen = 0;
-	VS_FIXEDFILEINFO* lpFfi = nullptr;
-	VerQueryValue(lpVersionInfo, _T("\\"), (LPVOID*)&lpFfi, &uLen);
-
-	DWORD dwFileVersionMS = lpFfi->dwFileVersionMS;
-	DWORD dwFileVersionLS = lpFfi->dwFileVersionLS;
-
-	delete[] lpVersionInfo;
-
-	DWORD dwLeftMost = HIWORD(dwFileVersionMS);
-	DWORD dwSecondLeft = LOWORD(dwFileVersionMS);
-	DWORD dwSecondRight = HIWORD(dwFileVersionLS);
-	DWORD dwRightMost = LOWORD(dwFileVersionLS);
-
-	CString str;
-	str.Format(L"%d.%d.%d.%d\n", dwLeftMost, dwSecondLeft, dwSecondRight, dwRightMost);
-
-	return str;
 }
 
 void CCopyWSRDlg::OnSysCommand(UINT nID, LPARAM lParam)

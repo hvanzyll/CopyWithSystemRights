@@ -27,7 +27,7 @@ UINT ServiceControl::registerService(const TCHAR* szServicePath, const  TCHAR* s
 		return GetLastError();
 
 	SC_HANDLE serviceHnd = CreateService(managerHnd, szServiceName, szDisplayName, SERVICE_ALL_ACCESS,
-		SERVICE_WIN32_OWN_PROCESS, SERVICE_AUTO_START, SERVICE_ERROR_NORMAL, szServicePath,
+		SERVICE_WIN32_OWN_PROCESS, SERVICE_DEMAND_START, SERVICE_ERROR_NORMAL, szServicePath,
 		NULL, NULL, NULL, NULL, NULL);
 	if (serviceHnd == NULL)
 	{
@@ -196,23 +196,22 @@ UINT ServiceControl::startService(wchar_t* szServiceName)
 		CloseServiceHandle(schSCManager);
 		return GetLastError();
 	}
-	else
-		//printf("Service start pending...\n");
+	
+	//printf("Service start pending...\n");
 
-	// Check the status until the service is no longer start pending.
-
-		if (!QueryServiceStatusEx(
-			schService,                     // handle to service
-			SC_STATUS_PROCESS_INFO,         // info level
-			(LPBYTE)&ssStatus,             // address of structure
-			sizeof(SERVICE_STATUS_PROCESS), // size of structure
-			&dwBytesNeeded))              // if buffer too small
-		{
-			//printf("QueryServiceStatusEx failed (%d)\n", GetLastError());
-			CloseServiceHandle(schService);
-			CloseServiceHandle(schSCManager);
-			return GetLastError();
-		}
+	//Check the status until the service is no longer start pending.
+	if (!QueryServiceStatusEx(
+		schService,                     // handle to service
+		SC_STATUS_PROCESS_INFO,         // info level
+		(LPBYTE)&ssStatus,             // address of structure
+		sizeof(SERVICE_STATUS_PROCESS), // size of structure
+		&dwBytesNeeded))              // if buffer too small
+	{
+		//printf("QueryServiceStatusEx failed (%d)\n", GetLastError());
+		CloseServiceHandle(schService);
+		CloseServiceHandle(schSCManager);
+		return GetLastError();
+	}
 
 	// Save the tick count and initial checkpoint.
 
@@ -282,7 +281,8 @@ UINT ServiceControl::startService(wchar_t* szServiceName)
 	CloseServiceHandle(schService);
 	CloseServiceHandle(schSCManager);
 
-	return ssStatus.dwCurrentState == SERVICE_RUNNING ? ERROR_SUCCESS : E_FAIL;
+	// service could be finished and no longer running
+	return ERROR_SUCCESS;
 }
 
 UINT ServiceControl::stopService(TCHAR* szServiceName)

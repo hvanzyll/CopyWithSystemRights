@@ -181,6 +181,7 @@ copy "$(OutDir)CopyWSRSvc.exe" "$(MSBuildProjectDirectory)\res\CopyWSRSvc.exe"</
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <AdditionalLibraryDirectories>$(OutDir)</AdditionalLibraryDirectories>
+      <UACExecutionLevel>RequireAdministrator</UACExecutionLevel>
     </Link>
     <Midl>
       <MkTypLibCompatible>false</MkTypLibCompatible>
@@ -200,6 +201,7 @@ copy "$(OutDir)CopyWSRSvc.exe" "$(MSBuildProjectDirectory)\res\CopyWSRSvc.exe"</
     </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="AboutDlg.h" />
     <ClInclude Include="CLIUsageDlg.h" />
     <ClInclude Include="CommandWriter.h" />
     <ClInclude Include="CopyWSRDlg.h" />
@@ -211,6 +213,7 @@ copy "$(OutDir)CopyWSRSvc.exe" "$(MSBuildProjectDirectory)\res\CopyWSRSvc.exe"</
     <ClInclude Include="targetver.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="AboutDlg.cpp" />
     <ClCompile Include="CLIUsageDlg.cpp" />
     <ClCompile Include="CommandWriter.cpp" />
     <ClCompile Include="CopyWSRDlg.cpp" />

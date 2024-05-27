@@ -21,8 +21,7 @@ END_MESSAGE_MAP()
 
 // CCopyWSRApp construction
 
-CCopyWSRApp::CCopyWSRApp() :
-	_ServicePath(L"")
+CCopyWSRApp::CCopyWSRApp()
 {
 	// support Restart Manager
 	m_dwRestartManagerSupportFlags = AFX_RESTART_MANAGER_SUPPORT_RESTART;
@@ -150,24 +149,58 @@ BOOL CCopyWSRApp::Process()
 	return needsProcess;
 }
 
-void CCopyWSRApp::RunService()
+BOOL CCopyWSRApp::RunService()
 {
+	if (!ServiceFileExists())
+		ExtractService();
+
 	if (!ServiceControl::isServiceRegistered(L"CopyWSRSvc"))
 	{
-		CString servicePath = GetServicePath();
-		ServiceControl::registerService(servicePath, L"CopyWSRSvc", L"Copy With System Rights, Service");
+		TCHAR path[MAX_PATH];
+		CommandWriter::getServiceFilePath(path, MAX_PATH);
+
+		UINT result = ServiceControl::registerService(path, L"CopyWSRSvc", L"CopyWSRSvc");
+		if (result != ERROR_SUCCESS)
+		{
+			CString s;
+			s.Format(_T("registerService error with 0x%X"), result);
+			AfxMessageBox(s);
+			return FALSE;
+		}
 	}
 
-	ServiceControl::startService(L"CopyWSRSvc");
+	UINT result = ServiceControl::startService(L"CopyWSRSvc");
+	if (result != ERROR_SUCCESS)
+	{
+		CString s;
+		s.Format(_T("startService error with 0x%X"), result);
+		AfxMessageBox(s);
+		return FALSE;
+	}
 	Sleep(1000);
+
+	return TRUE;
 }
 
-CString CCopyWSRApp::GetServicePath()
+BOOL CCopyWSRApp::ServiceFileExists()
 {
-	ASSERT(_ServicePath.IsEmpty());
 	TCHAR path[MAX_PATH];
 	CommandWriter::getServiceFilePath(path, MAX_PATH);
-	_ServicePath = path;
+	CString svcPath = path;
+
+	if (0xffffffff == GetFileAttributes(svcPath))
+	{
+		// file not found
+		return FALSE;
+	}
+
+	return TRUE;
+}
+
+void CCopyWSRApp::ExtractService()
+{
+	TCHAR path[MAX_PATH];
+	CommandWriter::getServiceFilePath(path, MAX_PATH);
 
 	// extract IDR_COPY_WRC_SVC_EXE from the resource
 	HRSRC hRes = FindResource(NULL, MAKEINTRESOURCE(IDR_COPY_WRC_SVC_EXE), L"RC_DATA");
@@ -179,7 +212,7 @@ CString CCopyWSRApp::GetServicePath()
 			LPVOID pResData = LockResource(hResData);
 			if (pResData != NULL)
 			{
-				HANDLE hFile = CreateFile(_ServicePath, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+				HANDLE hFile = CreateFile(path, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
 				if (hFile != INVALID_HANDLE_VALUE)
 				{
 					DWORD dwSize = SizeofResource(NULL, hRes);
@@ -190,21 +223,52 @@ CString CCopyWSRApp::GetServicePath()
 			}
 		}
 	}
-
-	return _ServicePath;
 }
 
 int CCopyWSRApp::ExitInstance()
 {
-	if (!_ServicePath.IsEmpty())
-	{
-		ServiceControl::stopService(L"CopyWSRSvc");
-		ServiceControl::unregisterService(L"CopyWSRSvc");
-		DeleteFile(_ServicePath);
-		_ServicePath.Empty();
-	}
+	TCHAR path[MAX_PATH];
+	CommandWriter::getServiceFilePath(path, MAX_PATH);
+	CString svcPath = path;
+	ServiceControl::stopService(L"CopyWSRSvc");
+	ServiceControl::unregisterService(L"CopyWSRSvc");
+	DeleteFile(svcPath);
 
 	CommandWriter::deleteCommandFile();
 
 	return CWinApp::ExitInstance();
+}
+
+CString CCopyWSRApp::GetFileVersionOfApplication()
+{
+	TCHAR szFileName[MAX_PATH] = { 0 };
+	DWORD dwLen = GetModuleFileName(NULL, szFileName, MAX_PATH);
+	if (dwLen == 0)
+		return _T("");
+
+	DWORD dwDummy = 0;
+	DWORD dwFVISize = GetFileVersionInfoSize(szFileName, &dwDummy);
+
+	LPBYTE lpVersionInfo = new BYTE[dwFVISize];
+
+	GetFileVersionInfo(szFileName, 0, dwFVISize, lpVersionInfo);
+
+	UINT uLen = 0;
+	VS_FIXEDFILEINFO* lpFfi = nullptr;
+	VerQueryValue(lpVersionInfo, _T("\\"), (LPVOID*)&lpFfi, &uLen);
+
+	DWORD dwFileVersionMS = lpFfi->dwFileVersionMS;
+	DWORD dwFileVersionLS = lpFfi->dwFileVersionLS;
+
+	delete[] lpVersionInfo;
+
+	DWORD dwLeftMost = HIWORD(dwFileVersionMS);
+	DWORD dwSecondLeft = LOWORD(dwFileVersionMS);
+	DWORD dwSecondRight = HIWORD(dwFileVersionLS);
+	DWORD dwRightMost = LOWORD(dwFileVersionLS);
+
+	CString str;
+	str.Format(L"%d.%d.%d.%d\n", dwLeftMost, dwSecondLeft, dwSecondRight, dwRightMost);
+
+	return str;
 }
