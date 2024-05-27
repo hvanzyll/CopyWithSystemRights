@@ -36,3 +36,5 @@ CopyWSRSvc/x64/
 ServiceLib/x64/
 TestCopy/x64/
 x64/
+*.user
+.vs/

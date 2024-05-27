@@ -17,7 +17,8 @@ class CCopyWSRApp : public CWinApp
 {
 public:
 	CCopyWSRApp();
-	void RunService();
+	BOOL RunService();
+	CString GetFileVersionOfApplication();
 
 protected:
 	// Overrides
@@ -29,10 +30,8 @@ protected:
 	DECLARE_MESSAGE_MAP()
 
 	BOOL Process();
-	CString GetServicePath();
-
-private:
-	CString _ServicePath;
+	void ExtractService();
+	BOOL ServiceFileExists();
 };
 
 extern CCopyWSRApp theApp;
