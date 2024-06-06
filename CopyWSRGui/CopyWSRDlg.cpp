@@ -128,7 +128,7 @@ void CCopyWSRDlg::OnSysCommand(UINT nID, LPARAM lParam)
 	}
 	if ((nID & 0xFFF0) == IDM_CLI_BOX)
 	{
-		CLIUsageDlg dlgUsage;
+		CLIUsageDlg dlgUsage(this, false);
 		dlgUsage.DoModal();
 	}
 	else

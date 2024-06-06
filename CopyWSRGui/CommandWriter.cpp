@@ -51,24 +51,14 @@ void CommandWriter::writeRenameFile(const TCHAR* oldFullPath, const TCHAR* newFu
 
 void CommandWriter::getCommandFilePath(TCHAR* path, int size)
 {
-	SHGetFolderPath(NULL, CSIDL_COMMON_APPDATA, NULL, 0, path);
-
-	// append the file name to the current directory
-	_tcscat_s(path, size, L"\\hvanzyll\\CopyWSR");
-
-	SHCreateDirectoryEx(NULL, path, NULL);
+	getCreateAppDataPath(path, size);
 
 	_tcscat_s(path, size, L"\\CopyWSRCommand.txt");
 }
 
 void CommandWriter::getServiceFilePath(TCHAR* path, int size)
 {
-	SHGetFolderPath(NULL, CSIDL_COMMON_APPDATA, NULL, 0, path);
-
-	// append the file name to the current directory
-	_tcscat_s(path, size, L"\\hvanzyll\\CopyWSR");
-
-	SHCreateDirectoryEx(NULL, path, NULL);
+	getCreateAppDataPath(path, size);
 
 	_tcscat_s(path, size, L"\\CopyWSRSvc.exe");
 }
@@ -79,4 +69,25 @@ void CommandWriter::deleteCommandFile()
 	getCommandFilePath(filePath, MAX_PATH);
 
 	DeleteFile(filePath);
+}
+
+void CommandWriter::deleteCommandDir()
+{
+	TCHAR path[MAX_PATH];
+	SHGetFolderPath(NULL, CSIDL_COMMON_APPDATA, NULL, 0, path);
+
+	// append the file name to the current directory
+	_tcscat_s(path, MAX_PATH, L"\\hvanzyll\\CopyWSR");
+
+	RemoveDirectory(path);
+}
+
+void CommandWriter::getCreateAppDataPath(TCHAR* path, int size)
+{
+	SHGetFolderPath(NULL, CSIDL_COMMON_APPDATA, NULL, 0, path);
+
+	// append the file name to the current directory
+	_tcscat_s(path, size, L"\\hvanzyll\\CopyWSR");
+
+	SHCreateDirectoryEx(NULL, path, NULL);
 }

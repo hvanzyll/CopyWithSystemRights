@@ -7,6 +7,7 @@
 #include "CommandWriter.h"
 
 #include "..\ServiceLib\ServiceControl.h"
+#include "CLIUsageDlg.h"
 #pragma comment(lib, "SimpleServiceLib.lib")
 
 #ifdef _DEBUG
@@ -77,22 +78,7 @@ BOOL CCopyWSRApp::InitInstance()
 	{
 		CCopyWSRDlg dlg;
 		m_pMainWnd = &dlg;
-		INT_PTR nResponse = dlg.DoModal();
-		if (nResponse == IDOK)
-		{
-			// TODO: Place code here to handle when the dialog is
-			//  dismissed with OK
-		}
-		else if (nResponse == IDCANCEL)
-		{
-			// TODO: Place code here to handle when the dialog is
-			//  dismissed with Cancel
-		}
-		else if (nResponse == -1)
-		{
-			TRACE(traceAppMsg, 0, "Warning: dialog creation failed, so application is terminating unexpectedly.\n");
-			TRACE(traceAppMsg, 0, "Warning: if you are using MFC controls on the dialog, you cannot #define _AFX_NO_MFC_CONTROLS_IN_DIALOGS.\n");
-		}
+		dlg.DoModal();
 	}
 
 	// Delete the shell manager created above.
@@ -114,39 +100,45 @@ BOOL CCopyWSRApp::Process()
 {
 	int argc;
 	LPWSTR* argv = CommandLineToArgvW(m_lpCmdLine, &argc);
-	BOOL needsProcess = TRUE;
-	if (argc > 1 && argv != NULL)
+	BOOL needsRunService = FALSE;
+	BOOL runUI = TRUE;
+	if (argc > 0 && argv != NULL)
 	{
 		// check if command is copy
 		if (_wcsicmp(argv[0], L"/copy") == 0 && argc == 3)
 		{
 			// copy the file
 			CommandWriter::writeCopyFile(argv[1], argv[2]);
-			needsProcess = false;
+			needsRunService = TRUE;
 		}
 		else if (_wcsicmp(argv[0], L"/delete") == 0 && argc == 2)
 		{
 			// copy the file
 			CommandWriter::writeDeleteFile(argv[1]);
-			needsProcess = false;
+			needsRunService = TRUE;
 		}
 		else if (_wcsicmp(argv[0], L"/rename") == 0 && argc == 3)
 		{
 			// copy the file
 			CommandWriter::writeRenameFile(argv[1], argv[2]);
-			needsProcess = false;
+			needsRunService = TRUE;
 		}
-		else
+		else if (m_lpCmdLine[0] != 0)
 		{
-			CString out = L"Usage: CopyWSR.exe[/copy|/delete|/rename][source][destination]\n";
-			MessageBox(NULL, out, L"Copy With System Rights CLI Arguments", MB_OK);
+			CLIUsageDlg dlgUsage(nullptr, true);
+			dlgUsage.DoModal();
+
+			runUI = dlgUsage.IsShowContinueToGui();
 		}
 	}
 
-	if (!needsProcess)
+	if (needsRunService)
+	{
 		RunService();
+		runUI = FALSE;
+	}
 
-	return needsProcess;
+	return runUI;
 }
 
 BOOL CCopyWSRApp::RunService()
@@ -232,9 +224,10 @@ int CCopyWSRApp::ExitInstance()
 	CString svcPath = path;
 	ServiceControl::stopService(L"CopyWSRSvc");
 	ServiceControl::unregisterService(L"CopyWSRSvc");
-	DeleteFile(svcPath);
+	/*DeleteFile(svcPath);
 
 	CommandWriter::deleteCommandFile();
+	CommandWriter::deleteCommandDir();*/
 
 	return CWinApp::ExitInstance();
 }

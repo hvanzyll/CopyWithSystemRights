@@ -13,6 +13,12 @@
 For command line mode, use the following syntax:
 ```
 Usage: CopyWSR.exe[/copy|/delete|/rename][source][destination]
+   /copy [source][destination]
+   /copy C:\Source\Dir\Filename.ext C:\Dest\Dir\Filename.ext
+   /delete [source]
+   /delete C:\Source\Dir\Filename.ext
+   /rename [source][destination]
+   /rename C:\Dir\OldFilename.ext C:\Dir\NewFilename.ext
 ```
 Please ensure that the source and destination paths are absolute.
 

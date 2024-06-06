@@ -9,5 +9,9 @@ public:
 
 	static void getServiceFilePath(TCHAR* path, int size);
 	static void deleteCommandFile();
+	static void deleteCommandDir();
 	static void getCommandFilePath(TCHAR* path, int size);
+
+protected:
+	static void getCreateAppDataPath(TCHAR* path, int size);
 };
