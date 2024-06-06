@@ -199,6 +199,11 @@ echo from "$(OutDir)CopyWSRSvc.exe"
 echo to $(MSBuildProjectDirectory)\res\CopyWSRSvc.exe"
 copy "$(OutDir)CopyWSRSvc.exe" "$(MSBuildProjectDirectory)\res\CopyWSRSvc.exe"</Command>
     </PreBuildEvent>
+    <PostBuildEvent>
+      <Command>echo Delete service executable from resource folder
+echo Delete from $(MSBuildProjectDirectory)\res\CopyWSRSvc.exe"
+del "$(MSBuildProjectDirectory)\res\CopyWSRSvc.exe"</Command>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="AboutDlg.h" />
