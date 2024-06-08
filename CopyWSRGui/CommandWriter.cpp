@@ -49,11 +49,43 @@ void CommandWriter::writeRenameFile(const TCHAR* oldFullPath, const TCHAR* newFu
 	}
 }
 
+bool CommandWriter::readResposeFile(TCHAR* data, int size)
+{
+	TCHAR responseFilePath[MAX_PATH];
+	getResponseFilePath(responseFilePath, MAX_PATH);
+
+	std::wifstream file;
+	file.open(responseFilePath, std::ios::in);
+	if (file.is_open())
+	{
+		file.getline(data, size);
+		file.close();
+		return true;
+	}
+
+	return false;
+}
+
 void CommandWriter::getCommandFilePath(TCHAR* path, int size)
 {
 	getCreateAppDataPath(path, size);
 
 	_tcscat_s(path, size, L"\\CopyWSRCommand.txt");
+}
+
+void CommandWriter::getResponseFilePath(TCHAR* path, int size)
+{
+	getCreateAppDataPath(path, size);
+
+	_tcscat_s(path, size, L"\\CopyWSRResponse.txt");
+}
+
+void CommandWriter::deleteResponseFile()
+{
+	TCHAR filePath[MAX_PATH];
+	getResponseFilePath(filePath, MAX_PATH);
+
+	DeleteFile(filePath);
 }
 
 void CommandWriter::getServiceFilePath(TCHAR* path, int size)

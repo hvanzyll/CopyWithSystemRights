@@ -28,6 +28,7 @@
 #define IDC_STATIC_NAME_VERSION         1009
 #define IDC_MFCLINK_PROJECT2            1010
 #define IDC_BUTTON_CONTINUE_GUI         1010
+#define IDC_BUTTON_OK                   1011
 
 // Next default values for new objects
 // 
@@ -35,7 +36,7 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        138
 #define _APS_NEXT_COMMAND_VALUE         32771
-#define _APS_NEXT_CONTROL_VALUE         1011
+#define _APS_NEXT_CONTROL_VALUE         1012
 #define _APS_NEXT_SYMED_VALUE           101
 #endif
 #endif
