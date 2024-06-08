@@ -15,8 +15,6 @@
 #define new DEBUG_NEW
 #endif
 
-// CAboutDlg dialog used for App About
-
 // CCopyWSRDlg dialog
 
 CCopyWSRDlg::CCopyWSRDlg(CWnd* pParent /*=nullptr*/)
@@ -43,6 +41,7 @@ BEGIN_MESSAGE_MAP(CCopyWSRDlg, CDialogEx)
 	ON_BN_CLICKED(IDC_BUTTON_RENAME, &CCopyWSRDlg::OnBnClickedButtonRename)
 	ON_WM_DROPFILES()
 	ON_BN_CLICKED(IDC_BUTTON_REFRESH, &CCopyWSRDlg::OnBnClickedButtonRefresh)
+	ON_BN_CLICKED(IDC_BUTTON_OK, &CCopyWSRDlg::OnBnClickedButtonOk)
 END_MESSAGE_MAP()
 
 // CCopyWSRDlg message handlers
@@ -137,10 +136,6 @@ void CCopyWSRDlg::OnSysCommand(UINT nID, LPARAM lParam)
 	}
 }
 
-// If you add a minimize button to your dialog, you will need the code below
-//  to draw the icon.  For MFC applications using the document/view model,
-//  this is automatically done for you by the framework.
-
 void CCopyWSRDlg::OnPaint()
 {
 	if (IsIconic())
@@ -166,8 +161,6 @@ void CCopyWSRDlg::OnPaint()
 	}
 }
 
-// The system calls this function to obtain the cursor to display while the user drags
-//  the minimized window.
 HCURSOR CCopyWSRDlg::OnQueryDragIcon()
 {
 	return static_cast<HCURSOR>(m_hIcon);
@@ -332,4 +325,14 @@ void CCopyWSRDlg::OnDropFiles(HDROP hDropInfo)
 void CCopyWSRDlg::OnBnClickedButtonRefresh()
 {
 	UpdateFileListBox();
+}
+
+void CCopyWSRDlg::OnBnClickedButtonOk()
+{
+	CDialogEx::OnOK();
+}
+
+void CCopyWSRDlg::OnOK()
+{
+	// do not close the dialog
 }

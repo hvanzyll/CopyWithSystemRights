@@ -143,6 +143,8 @@ BOOL CCopyWSRApp::Process()
 
 BOOL CCopyWSRApp::RunService()
 {
+	CommandWriter::deleteResponseFile();
+
 	if (!ServiceFileExists())
 		ExtractService();
 
@@ -169,9 +171,25 @@ BOOL CCopyWSRApp::RunService()
 		AfxMessageBox(s);
 		return FALSE;
 	}
-	Sleep(1000);
 
-	return TRUE;
+	TCHAR resposeData[4096] = { 0 };
+	int counter = 0;
+	while (!CommandWriter::readResposeFile(resposeData, MAX_PATH) && counter < 100)
+		Sleep(10);
+
+	if (resposeData[0] == 0)
+	{
+		AfxMessageBox(L"Timeout waiting for response", MB_OK | MB_ICONEXCLAMATION);
+		return FALSE;
+	}
+
+	// if first character is 0 then return true
+	if (resposeData[0] == '0')
+		return TRUE;
+
+	// show error message
+	AfxMessageBox(resposeData, MB_OK | MB_ICONEXCLAMATION);
+	return FALSE;
 }
 
 BOOL CCopyWSRApp::ServiceFileExists()
@@ -224,10 +242,11 @@ int CCopyWSRApp::ExitInstance()
 	CString svcPath = path;
 	ServiceControl::stopService(L"CopyWSRSvc");
 	ServiceControl::unregisterService(L"CopyWSRSvc");
-	/*DeleteFile(svcPath);
+	DeleteFile(svcPath);
 
 	CommandWriter::deleteCommandFile();
-	CommandWriter::deleteCommandDir();*/
+	CommandWriter::deleteResponseFile();
+	CommandWriter::deleteCommandDir();
 
 	return CWinApp::ExitInstance();
 }

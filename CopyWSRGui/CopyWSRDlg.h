@@ -18,8 +18,9 @@ public:
 protected:
 
 	virtual BOOL OnInitDialog();
-	void UpdateTitleWithVersion();
+
 	virtual void DoDataExchange(CDataExchange* pDX);	// DDX/DDV support
+	virtual void OnOK();
 
 	// Generated message map functions
 	afx_msg void OnSysCommand(UINT nID, LPARAM lParam);
@@ -30,9 +31,11 @@ protected:
 	afx_msg void OnBnClickedButtonDelete();
 	afx_msg void OnBnClickedButtonRename();
 	afx_msg void OnBnClickedButtonRefresh();
+	afx_msg void OnBnClickedButtonOk();
 	afx_msg void OnDropFiles(HDROP);
 	DECLARE_MESSAGE_MAP()
 
+	void UpdateTitleWithVersion();
 	void AddMenuItems();
 	void UpdateFileListBox();
 	void AddEntry(WIN32_FIND_DATA& findData);
