@@ -8,6 +8,7 @@
 #include "NewFileNameDlg.h"
 #include "CLIUsageDlg.h"
 #include "AboutDlg.h"
+#include "Settings.h"
 
 #pragma comment(lib, "Version.lib")
 
@@ -62,6 +63,13 @@ BOOL CCopyWSRDlg::OnInitDialog()
 	//  when the application's main window is not a dialog
 	SetIcon(m_hIcon, TRUE);			// Set big icon
 	SetIcon(m_hIcon, FALSE);		// Set small icon
+
+	CSettings settings;
+	if (settings.Load())
+	{
+		_Directory = settings.GetPath();
+		UpdateData(FALSE);
+	}
 
 	// create default column for the list control
 	CListCtrl* pList = (CListCtrl*)GetDlgItem(IDC_LIST_FILES);
@@ -335,4 +343,13 @@ void CCopyWSRDlg::OnBnClickedButtonOk()
 void CCopyWSRDlg::OnOK()
 {
 	// do not close the dialog
+}
+
+BOOL CCopyWSRDlg::DestroyWindow()
+{
+	CSettings settings;
+	settings.SetPath(_Directory);
+	settings.Save();
+
+	return CDialogEx::DestroyWindow();
 }

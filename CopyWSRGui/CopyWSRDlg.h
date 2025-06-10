@@ -18,9 +18,9 @@ public:
 protected:
 
 	virtual BOOL OnInitDialog();
-
 	virtual void DoDataExchange(CDataExchange* pDX);	// DDX/DDV support
 	virtual void OnOK();
+	virtual BOOL DestroyWindow();
 
 	// Generated message map functions
 	afx_msg void OnSysCommand(UINT nID, LPARAM lParam);
