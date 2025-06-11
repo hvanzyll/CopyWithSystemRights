@@ -24,8 +24,11 @@
 #define IDC_MFCLINK_EMAIL               1008
 #define IDC_MFCLINK_PROJECT             1008
 #define IDC_MFCLINK_MIT                 1008
+#define IDC_BUTTON_BROWSE               1008
 #define IDC_STATINAME_VERSION           1009
 #define IDC_STATIC_NAME_VERSION         1009
+#define IDC_BUTTON_BROWSE2              1009
+#define IDC_BUTTON_EXPLORER             1009
 #define IDC_MFCLINK_PROJECT2            1010
 #define IDC_BUTTON_CONTINUE_GUI         1010
 #define IDC_BUTTON_OK                   1011

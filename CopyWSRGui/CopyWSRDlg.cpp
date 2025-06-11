@@ -43,6 +43,9 @@ BEGIN_MESSAGE_MAP(CCopyWSRDlg, CDialogEx)
 	ON_WM_DROPFILES()
 	ON_BN_CLICKED(IDC_BUTTON_REFRESH, &CCopyWSRDlg::OnBnClickedButtonRefresh)
 	ON_BN_CLICKED(IDC_BUTTON_OK, &CCopyWSRDlg::OnBnClickedButtonOk)
+	ON_BN_CLICKED(IDC_BUTTON_BROWSE, &CCopyWSRDlg::OnBnClickedButtonBrowse)
+	ON_BN_CLICKED(IDC_BUTTON_EXPLORER, &CCopyWSRDlg::OnBnClickedButtonExplorer)
+	ON_WM_SIZING()
 END_MESSAGE_MAP()
 
 // CCopyWSRDlg message handlers
@@ -76,6 +79,11 @@ BOOL CCopyWSRDlg::OnInitDialog()
 	pList->InsertColumn(0, _T("File Name"), LVCFMT_LEFT, 200);
 
 	UpdateFileListBox();
+
+	CRect rect;
+	GetWindowRect(&rect);
+	_UIMinSize.cx = rect.Width();
+	_UIMinSize.cy = rect.Height();
 
 	return TRUE;  // return TRUE  unless you set the focus to a control
 }
@@ -352,4 +360,44 @@ BOOL CCopyWSRDlg::DestroyWindow()
 	settings.Save();
 
 	return CDialogEx::DestroyWindow();
+}
+void CCopyWSRDlg::OnBnClickedButtonBrowse()
+{
+	// directory selection dialog
+	CFolderPickerDialog dlg(_Directory, OFN_FILEMUSTEXIST | OFN_HIDEREADONLY, this);
+	if (dlg.DoModal() == IDOK)
+	{
+		_Directory = dlg.GetPathName();
+		UpdateData(FALSE);
+		UpdateFileListBox();
+	}
+}
+void CCopyWSRDlg::OnBnClickedButtonExplorer()
+{
+	// open folder in explorer
+	CString strPath = _Directory;
+	if (!strPath.IsEmpty())
+	{
+		// ensure the path ends with a backslash
+		if (strPath.Right(1) != _T("\\"))
+		{
+			strPath += _T("\\");
+		}
+		ShellExecute(NULL, _T("open"), strPath, NULL, NULL, SW_SHOWNORMAL);
+	}
+	else
+	{
+		AfxMessageBox(_T("Please select a directory first."));
+	}
+}
+void CCopyWSRDlg::OnSizing(UINT fwSide, LPRECT pRect)
+{
+	// ensure the dialog does not get smaller than the minimum size
+	if (pRect->right - pRect->left < _UIMinSize.cx)
+		pRect->right = pRect->left + _UIMinSize.cx;
+
+	if (pRect->bottom - pRect->top < _UIMinSize.cy)
+		pRect->bottom = pRect->top + _UIMinSize.cy;
+
+	CDialogEx::OnSizing(fwSide, pRect);
 }

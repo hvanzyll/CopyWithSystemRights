@@ -33,6 +33,9 @@ protected:
 	afx_msg void OnBnClickedButtonRefresh();
 	afx_msg void OnBnClickedButtonOk();
 	afx_msg void OnDropFiles(HDROP);
+	afx_msg void OnBnClickedButtonBrowse();
+	afx_msg void OnBnClickedButtonExplorer();
+	afx_msg void OnSizing(UINT fwSide, LPRECT pRect);
 	DECLARE_MESSAGE_MAP()
 
 	void UpdateTitleWithVersion();
@@ -46,4 +49,5 @@ private:
 	HICON m_hIcon;
 	CString _Directory;
 	CListBox _FilesListBox;
+	CSize _UIMinSize;
 };
