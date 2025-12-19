@@ -24,22 +24,21 @@
 #define IDC_MFCLINK_EMAIL               1008
 #define IDC_MFCLINK_PROJECT             1008
 #define IDC_MFCLINK_MIT                 1008
-#define IDC_BUTTON_BROWSE               1008
+#define IDC_BUTTON_BACKUP               1008
 #define IDC_STATINAME_VERSION           1009
 #define IDC_STATIC_NAME_VERSION         1009
-#define IDC_BUTTON_BROWSE2              1009
-#define IDC_BUTTON_EXPLORER             1009
+#define IDC_BUTTON_RESTORE              1009
 #define IDC_MFCLINK_PROJECT2            1010
 #define IDC_BUTTON_CONTINUE_GUI         1010
-#define IDC_BUTTON_OK                   1011
+#define IDC_BUTTON_BROWSE               1010
 
 // Next default values for new objects
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        138
+#define _APS_NEXT_RESOURCE_VALUE        139
 #define _APS_NEXT_COMMAND_VALUE         32771
-#define _APS_NEXT_CONTROL_VALUE         1012
+#define _APS_NEXT_CONTROL_VALUE         1013
 #define _APS_NEXT_SYMED_VALUE           101
 #endif
 #endif

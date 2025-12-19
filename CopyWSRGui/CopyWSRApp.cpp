@@ -175,7 +175,10 @@ BOOL CCopyWSRApp::RunService()
 	TCHAR resposeData[4096] = { 0 };
 	int counter = 0;
 	while (!CommandWriter::readResposeFile(resposeData, MAX_PATH) && counter < 100)
+	{
+		counter++;
 		Sleep(10);
+	}
 
 	if (resposeData[0] == 0)
 	{

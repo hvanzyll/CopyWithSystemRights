@@ -8,19 +8,27 @@
 #include "NewFileNameDlg.h"
 #include "CLIUsageDlg.h"
 #include "AboutDlg.h"
-#include "Settings.h"
 
-#pragma comment(lib, "Version.lib")
+
+
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
 #endif
+
+#define FILENAME_COLUMN_INDEX 0
+#define SIZE_COLUMN_INDEX 1
+#define DATE_COLUMN_INDEX 2
+#define BACKUP_FILE_EXTENSION _T(".wsrbackup")
+
+// CAboutDlg dialog used for App About
 
 // CCopyWSRDlg dialog
 
 CCopyWSRDlg::CCopyWSRDlg(CWnd* pParent /*=nullptr*/)
 	: CDialogEx(IDD_COPYWSRGUI_DIALOG, pParent)
 	, _Directory(_T(""))
+	, _CurrentSort(FILENAME_LOW)
 {
 	m_hIcon = AfxGetApp()->LoadIcon(IDR_MAINFRAME);
 }
@@ -30,6 +38,7 @@ void CCopyWSRDlg::DoDataExchange(CDataExchange* pDX)
 	CDialogEx::DoDataExchange(pDX);
 	DDX_Text(pDX, IDC_EDIT_DIRECTORY, _Directory);
 	DDX_Control(pDX, IDC_LIST_FILES, _FilesListBox);
+	DDX_Control(pDX, IDC_BUTTON_RESTORE, _RestoreBtn);
 }
 
 BEGIN_MESSAGE_MAP(CCopyWSRDlg, CDialogEx)
@@ -42,10 +51,11 @@ BEGIN_MESSAGE_MAP(CCopyWSRDlg, CDialogEx)
 	ON_BN_CLICKED(IDC_BUTTON_RENAME, &CCopyWSRDlg::OnBnClickedButtonRename)
 	ON_WM_DROPFILES()
 	ON_BN_CLICKED(IDC_BUTTON_REFRESH, &CCopyWSRDlg::OnBnClickedButtonRefresh)
-	ON_BN_CLICKED(IDC_BUTTON_OK, &CCopyWSRDlg::OnBnClickedButtonOk)
+	ON_NOTIFY(LVN_COLUMNCLICK, IDC_LIST_FILES, &CCopyWSRDlg::OnListFilesColumnClick)
+	ON_BN_CLICKED(IDC_BUTTON_BACKUP, &CCopyWSRDlg::OnBnClickedButtonBackup)
+	ON_BN_CLICKED(IDC_BUTTON_RESTORE, &CCopyWSRDlg::OnBnClickedButtonRestore)
+	ON_NOTIFY(LVN_ITEMCHANGED, IDC_LIST_FILES, &CCopyWSRDlg::OnLvnItemchangedListFiles)
 	ON_BN_CLICKED(IDC_BUTTON_BROWSE, &CCopyWSRDlg::OnBnClickedButtonBrowse)
-	ON_BN_CLICKED(IDC_BUTTON_EXPLORER, &CCopyWSRDlg::OnBnClickedButtonExplorer)
-	ON_WM_SIZING()
 END_MESSAGE_MAP()
 
 // CCopyWSRDlg message handlers
@@ -67,23 +77,15 @@ BOOL CCopyWSRDlg::OnInitDialog()
 	SetIcon(m_hIcon, TRUE);			// Set big icon
 	SetIcon(m_hIcon, FALSE);		// Set small icon
 
-	CSettings settings;
-	if (settings.Load())
-	{
-		_Directory = settings.GetPath();
-		UpdateData(FALSE);
-	}
+	_RestoreBtn.EnableWindow(FALSE);
 
 	// create default column for the list control
 	CListCtrl* pList = (CListCtrl*)GetDlgItem(IDC_LIST_FILES);
-	pList->InsertColumn(0, _T("File Name"), LVCFMT_LEFT, 200);
+	pList->InsertColumn(FILENAME_COLUMN_INDEX , _T("File Name"), LVCFMT_LEFT, 350);
+	pList->InsertColumn(SIZE_COLUMN_INDEX, _T("Size"), LVCFMT_RIGHT, 100);
+	pList->InsertColumn(DATE_COLUMN_INDEX, _T("Date/Time"), LVCFMT_RIGHT, 200);
 
 	UpdateFileListBox();
-
-	CRect rect;
-	GetWindowRect(&rect);
-	_UIMinSize.cx = rect.Width();
-	_UIMinSize.cy = rect.Height();
 
 	return TRUE;  // return TRUE  unless you set the focus to a control
 }
@@ -152,6 +154,10 @@ void CCopyWSRDlg::OnSysCommand(UINT nID, LPARAM lParam)
 	}
 }
 
+// If you add a minimize button to your dialog, you will need the code below
+//  to draw the icon.  For MFC applications using the document/view model,
+//  this is automatically done for you by the framework.
+
 void CCopyWSRDlg::OnPaint()
 {
 	if (IsIconic())
@@ -177,6 +183,103 @@ void CCopyWSRDlg::OnPaint()
 	}
 }
 
+void CCopyWSRDlg::OnListFilesColumnClick(NMHDR* pNMHDR, LRESULT* pResult)
+{
+	LPNMLISTVIEW pNMListView = reinterpret_cast<LPNMLISTVIEW>(pNMHDR);
+	int nColClicked = pNMListView->iSubItem;
+	switch (nColClicked)
+	{
+		case FILENAME_COLUMN_INDEX:
+			if (_CurrentSort == FILENAME_LOW)
+				_CurrentSort = FILENAME_HIGH;
+			else
+				_CurrentSort = FILENAME_LOW;
+			break;
+
+		case SIZE_COLUMN_INDEX:
+			if (_CurrentSort == SIZE_LOW)
+				_CurrentSort = SIZE_HIGH;
+			else
+				_CurrentSort = SIZE_LOW;			
+			break;
+		case DATE_COLUMN_INDEX:
+			if (_CurrentSort == DATE_LOW)
+				_CurrentSort = DATE_HIGH;
+			else
+				_CurrentSort = DATE_LOW;
+			break;
+	}
+	
+	AddFilesToListControl();
+}
+
+void CCopyWSRDlg::Sort()
+{
+	switch (_CurrentSort)
+	{
+		case FILENAME_LOW:
+
+			_FileListData.sort(
+				[](const WIN32_FIND_DATA& a, const WIN32_FIND_DATA& b) {
+					return std::wstring(a.cFileName) < std::wstring(b.cFileName);
+				}
+			);
+			break;
+		case FILENAME_HIGH:
+
+			_FileListData.sort(
+				[](const WIN32_FIND_DATA& a, const WIN32_FIND_DATA& b) {
+					return std::wstring(a.cFileName) > std::wstring(b.cFileName);
+				}
+			);
+			break;
+		case SIZE_LOW:
+			_FileListData.sort(
+				[](const WIN32_FIND_DATA& a, const WIN32_FIND_DATA& b) {
+					ULARGE_INTEGER sizeA, sizeB;
+					sizeA.LowPart = a.nFileSizeLow;
+					sizeA.HighPart = a.nFileSizeHigh;
+					sizeB.LowPart = b.nFileSizeLow;
+					sizeB.HighPart = b.nFileSizeHigh;
+					return sizeA.QuadPart < sizeB.QuadPart;
+				}
+			);
+			break;
+		case SIZE_HIGH:
+			_FileListData.sort(
+				[](const WIN32_FIND_DATA& a, const WIN32_FIND_DATA& b) {
+					ULARGE_INTEGER sizeA, sizeB;
+					sizeA.LowPart = a.nFileSizeLow;
+					sizeA.HighPart = a.nFileSizeHigh;
+					sizeB.LowPart = b.nFileSizeLow;
+					sizeB.HighPart = b.nFileSizeHigh;
+					return sizeA.QuadPart > sizeB.QuadPart;
+				}
+			);
+		case DATE_LOW:
+			_FileListData.sort(
+				[](const WIN32_FIND_DATA& a, const WIN32_FIND_DATA& b) {
+					FILETIME ftA = a.ftLastWriteTime;
+					FILETIME ftB = b.ftLastWriteTime;
+					return CompareFileTime(&ftA, &ftB) < 0;
+				}
+			);
+			break;
+		case DATE_HIGH:
+			_FileListData.sort(
+				[](const WIN32_FIND_DATA& a, const WIN32_FIND_DATA& b) {
+					FILETIME ftA = a.ftLastWriteTime;
+					FILETIME ftB = b.ftLastWriteTime;
+					return CompareFileTime(&ftA, &ftB) > 0;
+				}
+			);
+
+			break;
+	}
+}
+
+// The system calls this function to obtain the cursor to display while the user drags
+//  the minimized window.
 HCURSOR CCopyWSRDlg::OnQueryDragIcon()
 {
 	return static_cast<HCURSOR>(m_hIcon);
@@ -187,12 +290,18 @@ void CCopyWSRDlg::OnEnChangeEditDirectory()
 	UpdateFileListBox();
 }
 
+void CCopyWSRDlg::AddEntryToList(WIN32_FIND_DATA& findData)
+{
+	_FileListData.push_back(findData);
+}
+
 void CCopyWSRDlg::UpdateFileListBox()
 {
 	UpdateData(TRUE);
 
 	// clear the list box
-	_FilesListBox.ResetContent();
+	
+	_FileListData.clear();
 	if (_Directory.IsEmpty())
 		return;
 
@@ -204,25 +313,89 @@ void CCopyWSRDlg::UpdateFileListBox()
 	if (hFind != INVALID_HANDLE_VALUE)
 	{
 		// add the first file to the list control
-		AddEntry(findData);
+		AddEntryToList(findData);
 
 		// get the next file in the directory
 		while (FindNextFile(hFind, &findData))
 		{
 			// check if the file is not a directory
-			AddEntry(findData);
+			AddEntryToList(findData);
 		}
 		// close the find handle
 		FindClose(hFind);
 	}
+
+	// add all files to the list control
+	AddFilesToListControl();
+}
+
+void CCopyWSRDlg::AddFilesToListControl()
+{
+	_FilesListBox.DeleteAllItems();
+	Sort();
+	for (auto& entry : _FileListData)
+	{
+		AddEntry(entry);
+	}
+}
+
+static int AddData(CListCtrl& ctrl, int row, int col, WCHAR* str)
+{
+	LVITEM lv;
+	lv.iItem = row;
+	lv.iSubItem = col;
+	lv.pszText = str;
+	lv.mask = LVIF_TEXT;
+	if (col == 0)
+		return ctrl.InsertItem(&lv);
+	else
+		return ctrl.SetItem(&lv);
+}
+
+static std::wstring FormatNumber(ULONGLONG number)
+{
+	const wchar_t* suffixes[] = { L"", L"K", L"M", L"G", L"T", L"P", L"E" };
+	int suffixIndex = 0;
+	double displayNumber = static_cast<double>(number);
+	while (displayNumber >= 1024.0 && suffixIndex < _countof(suffixes) - 1)
+	{
+		displayNumber /= 1024.0;
+		suffixIndex++;
+	}
+	wchar_t buffer[64];
+	swprintf_s(buffer, L"%.2f %sB", displayNumber, suffixes[suffixIndex]);
+	return std::wstring(buffer);
 }
 
 void CCopyWSRDlg::AddEntry(WIN32_FIND_DATA& findData)
 {
 	if (!(findData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY))
 	{
-		// add the next file to the list control
-		_FilesListBox.AddString(findData.cFileName);
+		int count = _FilesListBox.GetItemCount();
+		int index = AddData(_FilesListBox, count, FILENAME_COLUMN_INDEX, findData.cFileName);
+		if (index != LB_ERR && index != LB_ERRSPACE)
+		{
+			ULARGE_INTEGER fileSize;
+			fileSize.LowPart = findData.nFileSizeLow;
+			fileSize.HighPart = findData.nFileSizeHigh;
+			std::wstring sizeStr = FormatNumber(fileSize.QuadPart);
+			AddData(_FilesListBox, count, SIZE_COLUMN_INDEX, &sizeStr[0]);
+
+			// format date/time
+			FILETIME localFileTime;
+			FileTimeToLocalFileTime(&findData.ftLastWriteTime, &localFileTime);
+			SYSTEMTIME systemTime;
+			FileTimeToSystemTime(&localFileTime, &systemTime);
+			wchar_t dateTimeStr[64];
+			swprintf_s(dateTimeStr, L"%04d-%02d-%02d %02d:%02d:%02d",
+				systemTime.wYear,
+				systemTime.wMonth,
+				systemTime.wDay,
+				systemTime.wHour,
+				systemTime.wMinute,
+				systemTime.wSecond);
+			AddData(_FilesListBox, count, DATE_COLUMN_INDEX, dateTimeStr);
+		}
 	}
 }
 
@@ -252,49 +425,44 @@ void CCopyWSRDlg::OnBnClickedButtonCopy()
 
 void CCopyWSRDlg::OnBnClickedButtonDelete()
 {
-	// get the selected string
-	int index = _FilesListBox.GetCurSel();
-	if (index == LB_ERR)
-		return;
+    // get the selected item
+    int index = _FilesListBox.GetNextItem(-1, LVNI_SELECTED);
+    if (index == -1)
+        return;
 
-	CString str;
-	_FilesListBox.GetText(index, str);
-	// get the full path
-	CString fullPath = _Directory + _T("\\") + str;
+    CString str = _FilesListBox.GetItemText(index, 0);
+    CString fullPath = _Directory + _T("\\") + str;
 
-	CWaitCursor wait;
+    CWaitCursor wait;
 
-	CommandWriter::writeDeleteFile(fullPath);
+    CommandWriter::writeDeleteFile(fullPath);
 
-	RunService();
-	UpdateFileListBox();
+    RunService();
+    UpdateFileListBox();
 }
 
 void CCopyWSRDlg::OnBnClickedButtonRename()
 {
-	// get the selected string
-	int index = _FilesListBox.GetCurSel();
-	if (index == LB_ERR)
-		return;
+    // get the selected item
+    int index = _FilesListBox.GetNextItem(-1, LVNI_SELECTED);
+    if (index == -1)
+        return;
 
-	CString oldFileName;
-	_FilesListBox.GetText(index, oldFileName);
-	// get the full path
-	CString oldFullPath = _Directory + _T("\\") + oldFileName;
+    CString oldFileName = _FilesListBox.GetItemText(index, 0);
+    CString oldFullPath = _Directory + _T("\\") + oldFileName;
 
-	CNewFileNameDlg dlg(this, oldFileName);
-	if (dlg.DoModal() != IDOK)
-		return;
+    CNewFileNameDlg dlg(this, oldFileName);
+    if (dlg.DoModal() != IDOK)
+        return;
 
-	// get the new full path
-	CString newFullPath = _Directory + _T("\\") + dlg.GetNewFileName();
+    CString newFullPath = _Directory + _T("\\") + dlg.GetNewFileName();
 
-	CWaitCursor wait;
+    CWaitCursor wait;
 
-	CommandWriter::writeRenameFile(oldFullPath, newFullPath);
+    CommandWriter::writeRenameFile(oldFullPath, newFullPath);
 
-	RunService();
-	UpdateFileListBox();
+    RunService();
+    UpdateFileListBox();
 }
 
 void CCopyWSRDlg::RunService()
@@ -343,61 +511,77 @@ void CCopyWSRDlg::OnBnClickedButtonRefresh()
 	UpdateFileListBox();
 }
 
-void CCopyWSRDlg::OnBnClickedButtonOk()
+void CCopyWSRDlg::OnBnClickedButtonBackup()
 {
-	CDialogEx::OnOK();
+	int index = _FilesListBox.GetNextItem(-1, LVNI_SELECTED);
+	if (index == -1)
+		return;
+
+	CString str = _FilesListBox.GetItemText(index, 0);
+	CString fullSourcePath = _Directory + _T("\\") + str;
+
+	CString fullDestPath = fullSourcePath + BACKUP_FILE_EXTENSION;
+
+	CWaitCursor wait;
+
+	CommandWriter::writeCopyFile(fullSourcePath, fullDestPath);
+
+	RunService();
+	UpdateFileListBox();
 }
 
-void CCopyWSRDlg::OnOK()
+void CCopyWSRDlg::OnBnClickedButtonRestore()
 {
-	// do not close the dialog
+	int index = _FilesListBox.GetNextItem(-1, LVNI_SELECTED);
+	if (index == -1)
+		return;
+
+	CString str = _FilesListBox.GetItemText(index, 0);
+	CString fullSourcePath = _Directory + _T("\\") + str;
+
+	// remove .wsrbackup extension
+	int extPos = fullSourcePath.ReverseFind('.');
+	if (extPos == -1)
+		return;
+
+	CString fullDestPath = fullSourcePath.Left(extPos);
+
+	CWaitCursor wait;
+
+	CommandWriter::writeCopyFile(fullSourcePath, fullDestPath);
+
+	RunService();
+	UpdateFileListBox();
 }
 
-BOOL CCopyWSRDlg::DestroyWindow()
+void CCopyWSRDlg::OnLvnItemchangedListFiles(NMHDR* pNMHDR, LRESULT* pResult)
 {
-	CSettings settings;
-	settings.SetPath(_Directory);
-	settings.Save();
+	LPNMLISTVIEW pNMLV = reinterpret_cast<LPNMLISTVIEW>(pNMHDR);
+	// TODO: Add your control notification handler code here
+	*pResult = 0;
 
-	return CDialogEx::DestroyWindow();
+	if (pNMLV->iItem == -1)
+		return;
+
+	CString str = _FilesListBox.GetItemText(pNMLV->iItem, 0);
+
+	bool result = IsBackupFile(str);
+	_RestoreBtn.EnableWindow(result);
 }
+
+BOOL CCopyWSRDlg::IsBackupFile(CString str)
+{
+	// if file ends with .wsrbackup 
+
+	int length = CString(BACKUP_FILE_EXTENSION).GetLength();
+	int pos = str.Right(length).CompareNoCase(BACKUP_FILE_EXTENSION);
+	
+	return pos == 0;
+}
+
 void CCopyWSRDlg::OnBnClickedButtonBrowse()
 {
-	// directory selection dialog
-	CFolderPickerDialog dlg(_Directory, OFN_FILEMUSTEXIST | OFN_HIDEREADONLY, this);
-	if (dlg.DoModal() == IDOK)
-	{
-		_Directory = dlg.GetPathName();
-		UpdateData(FALSE);
-		UpdateFileListBox();
-	}
-}
-void CCopyWSRDlg::OnBnClickedButtonExplorer()
-{
-	// open folder in explorer
-	CString strPath = _Directory;
-	if (!strPath.IsEmpty())
-	{
-		// ensure the path ends with a backslash
-		if (strPath.Right(1) != _T("\\"))
-		{
-			strPath += _T("\\");
-		}
-		ShellExecute(NULL, _T("open"), strPath, NULL, NULL, SW_SHOWNORMAL);
-	}
-	else
-	{
-		AfxMessageBox(_T("Please select a directory first."));
-	}
-}
-void CCopyWSRDlg::OnSizing(UINT fwSide, LPRECT pRect)
-{
-	// ensure the dialog does not get smaller than the minimum size
-	if (pRect->right - pRect->left < _UIMinSize.cx)
-		pRect->right = pRect->left + _UIMinSize.cx;
+	// dirctory browse dialog defaulting to c:\windows\system32
 
-	if (pRect->bottom - pRect->top < _UIMinSize.cy)
-		pRect->bottom = pRect->top + _UIMinSize.cy;
-
-	CDialogEx::OnSizing(fwSide, pRect);
+	
 }
