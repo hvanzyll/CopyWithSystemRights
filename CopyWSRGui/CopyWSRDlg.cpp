@@ -8,9 +8,7 @@
 #include "NewFileNameDlg.h"
 #include "CLIUsageDlg.h"
 #include "AboutDlg.h"
-
-
-
+#include "Settings.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -72,6 +70,13 @@ BOOL CCopyWSRDlg::OnInitDialog()
 	AddMenuItems();
 	UpdateTitleWithVersion();
 
+	CSettings settings;
+	if (settings.Load())
+	{
+		_Directory = settings.GetPath();
+		UpdateData(FALSE);
+	}
+
 	// Set the icon for this dialog.  The framework does this automatically
 	//  when the application's main window is not a dialog
 	SetIcon(m_hIcon, TRUE);			// Set big icon
@@ -81,7 +86,7 @@ BOOL CCopyWSRDlg::OnInitDialog()
 
 	// create default column for the list control
 	CListCtrl* pList = (CListCtrl*)GetDlgItem(IDC_LIST_FILES);
-	pList->InsertColumn(FILENAME_COLUMN_INDEX , _T("File Name"), LVCFMT_LEFT, 350);
+	pList->InsertColumn(FILENAME_COLUMN_INDEX, _T("File Name"), LVCFMT_LEFT, 350);
 	pList->InsertColumn(SIZE_COLUMN_INDEX, _T("Size"), LVCFMT_RIGHT, 100);
 	pList->InsertColumn(DATE_COLUMN_INDEX, _T("Date/Time"), LVCFMT_RIGHT, 200);
 
@@ -189,27 +194,27 @@ void CCopyWSRDlg::OnListFilesColumnClick(NMHDR* pNMHDR, LRESULT* pResult)
 	int nColClicked = pNMListView->iSubItem;
 	switch (nColClicked)
 	{
-		case FILENAME_COLUMN_INDEX:
-			if (_CurrentSort == FILENAME_LOW)
-				_CurrentSort = FILENAME_HIGH;
-			else
-				_CurrentSort = FILENAME_LOW;
-			break;
+	case FILENAME_COLUMN_INDEX:
+		if (_CurrentSort == FILENAME_LOW)
+			_CurrentSort = FILENAME_HIGH;
+		else
+			_CurrentSort = FILENAME_LOW;
+		break;
 
-		case SIZE_COLUMN_INDEX:
-			if (_CurrentSort == SIZE_LOW)
-				_CurrentSort = SIZE_HIGH;
-			else
-				_CurrentSort = SIZE_LOW;			
-			break;
-		case DATE_COLUMN_INDEX:
-			if (_CurrentSort == DATE_LOW)
-				_CurrentSort = DATE_HIGH;
-			else
-				_CurrentSort = DATE_LOW;
-			break;
+	case SIZE_COLUMN_INDEX:
+		if (_CurrentSort == SIZE_LOW)
+			_CurrentSort = SIZE_HIGH;
+		else
+			_CurrentSort = SIZE_LOW;
+		break;
+	case DATE_COLUMN_INDEX:
+		if (_CurrentSort == DATE_LOW)
+			_CurrentSort = DATE_HIGH;
+		else
+			_CurrentSort = DATE_LOW;
+		break;
 	}
-	
+
 	AddFilesToListControl();
 }
 
@@ -217,64 +222,64 @@ void CCopyWSRDlg::Sort()
 {
 	switch (_CurrentSort)
 	{
-		case FILENAME_LOW:
+	case FILENAME_LOW:
 
-			_FileListData.sort(
-				[](const WIN32_FIND_DATA& a, const WIN32_FIND_DATA& b) {
-					return std::wstring(a.cFileName) < std::wstring(b.cFileName);
-				}
-			);
-			break;
-		case FILENAME_HIGH:
+		_FileListData.sort(
+			[](const WIN32_FIND_DATA& a, const WIN32_FIND_DATA& b) {
+				return std::wstring(a.cFileName) < std::wstring(b.cFileName);
+			}
+		);
+		break;
+	case FILENAME_HIGH:
 
-			_FileListData.sort(
-				[](const WIN32_FIND_DATA& a, const WIN32_FIND_DATA& b) {
-					return std::wstring(a.cFileName) > std::wstring(b.cFileName);
-				}
-			);
-			break;
-		case SIZE_LOW:
-			_FileListData.sort(
-				[](const WIN32_FIND_DATA& a, const WIN32_FIND_DATA& b) {
-					ULARGE_INTEGER sizeA, sizeB;
-					sizeA.LowPart = a.nFileSizeLow;
-					sizeA.HighPart = a.nFileSizeHigh;
-					sizeB.LowPart = b.nFileSizeLow;
-					sizeB.HighPart = b.nFileSizeHigh;
-					return sizeA.QuadPart < sizeB.QuadPart;
-				}
-			);
-			break;
-		case SIZE_HIGH:
-			_FileListData.sort(
-				[](const WIN32_FIND_DATA& a, const WIN32_FIND_DATA& b) {
-					ULARGE_INTEGER sizeA, sizeB;
-					sizeA.LowPart = a.nFileSizeLow;
-					sizeA.HighPart = a.nFileSizeHigh;
-					sizeB.LowPart = b.nFileSizeLow;
-					sizeB.HighPart = b.nFileSizeHigh;
-					return sizeA.QuadPart > sizeB.QuadPart;
-				}
-			);
-		case DATE_LOW:
-			_FileListData.sort(
-				[](const WIN32_FIND_DATA& a, const WIN32_FIND_DATA& b) {
-					FILETIME ftA = a.ftLastWriteTime;
-					FILETIME ftB = b.ftLastWriteTime;
-					return CompareFileTime(&ftA, &ftB) < 0;
-				}
-			);
-			break;
-		case DATE_HIGH:
-			_FileListData.sort(
-				[](const WIN32_FIND_DATA& a, const WIN32_FIND_DATA& b) {
-					FILETIME ftA = a.ftLastWriteTime;
-					FILETIME ftB = b.ftLastWriteTime;
-					return CompareFileTime(&ftA, &ftB) > 0;
-				}
-			);
+		_FileListData.sort(
+			[](const WIN32_FIND_DATA& a, const WIN32_FIND_DATA& b) {
+				return std::wstring(a.cFileName) > std::wstring(b.cFileName);
+			}
+		);
+		break;
+	case SIZE_LOW:
+		_FileListData.sort(
+			[](const WIN32_FIND_DATA& a, const WIN32_FIND_DATA& b) {
+				ULARGE_INTEGER sizeA, sizeB;
+				sizeA.LowPart = a.nFileSizeLow;
+				sizeA.HighPart = a.nFileSizeHigh;
+				sizeB.LowPart = b.nFileSizeLow;
+				sizeB.HighPart = b.nFileSizeHigh;
+				return sizeA.QuadPart < sizeB.QuadPart;
+			}
+		);
+		break;
+	case SIZE_HIGH:
+		_FileListData.sort(
+			[](const WIN32_FIND_DATA& a, const WIN32_FIND_DATA& b) {
+				ULARGE_INTEGER sizeA, sizeB;
+				sizeA.LowPart = a.nFileSizeLow;
+				sizeA.HighPart = a.nFileSizeHigh;
+				sizeB.LowPart = b.nFileSizeLow;
+				sizeB.HighPart = b.nFileSizeHigh;
+				return sizeA.QuadPart > sizeB.QuadPart;
+			}
+		);
+	case DATE_LOW:
+		_FileListData.sort(
+			[](const WIN32_FIND_DATA& a, const WIN32_FIND_DATA& b) {
+				FILETIME ftA = a.ftLastWriteTime;
+				FILETIME ftB = b.ftLastWriteTime;
+				return CompareFileTime(&ftA, &ftB) < 0;
+			}
+		);
+		break;
+	case DATE_HIGH:
+		_FileListData.sort(
+			[](const WIN32_FIND_DATA& a, const WIN32_FIND_DATA& b) {
+				FILETIME ftA = a.ftLastWriteTime;
+				FILETIME ftB = b.ftLastWriteTime;
+				return CompareFileTime(&ftA, &ftB) > 0;
+			}
+		);
 
-			break;
+		break;
 	}
 }
 
@@ -300,7 +305,7 @@ void CCopyWSRDlg::UpdateFileListBox()
 	UpdateData(TRUE);
 
 	// clear the list box
-	
+
 	_FileListData.clear();
 	if (_Directory.IsEmpty())
 		return;
@@ -421,48 +426,52 @@ void CCopyWSRDlg::OnBnClickedButtonCopy()
 
 	RunService();
 	UpdateFileListBox();
+
+	MessageBox(_T("File copied."), _T("Info"), MB_OK | MB_ICONINFORMATION);
 }
 
 void CCopyWSRDlg::OnBnClickedButtonDelete()
 {
-    // get the selected item
-    int index = _FilesListBox.GetNextItem(-1, LVNI_SELECTED);
-    if (index == -1)
-        return;
+	// get the selected item
+	int index = _FilesListBox.GetNextItem(-1, LVNI_SELECTED);
+	if (index == -1)
+		return;
 
-    CString str = _FilesListBox.GetItemText(index, 0);
-    CString fullPath = _Directory + _T("\\") + str;
+	CString str = _FilesListBox.GetItemText(index, 0);
+	CString fullPath = _Directory + _T("\\") + str;
 
-    CWaitCursor wait;
+	CWaitCursor wait;
 
-    CommandWriter::writeDeleteFile(fullPath);
+	CommandWriter::writeDeleteFile(fullPath);
 
-    RunService();
-    UpdateFileListBox();
+	RunService();
+	UpdateFileListBox();
+
+	MessageBox(_T("File deleted."), _T("Info"), MB_OK | MB_ICONINFORMATION);
 }
 
 void CCopyWSRDlg::OnBnClickedButtonRename()
 {
-    // get the selected item
-    int index = _FilesListBox.GetNextItem(-1, LVNI_SELECTED);
-    if (index == -1)
-        return;
+	// get the selected item
+	int index = _FilesListBox.GetNextItem(-1, LVNI_SELECTED);
+	if (index == -1)
+		return;
 
-    CString oldFileName = _FilesListBox.GetItemText(index, 0);
-    CString oldFullPath = _Directory + _T("\\") + oldFileName;
+	CString oldFileName = _FilesListBox.GetItemText(index, 0);
+	CString oldFullPath = _Directory + _T("\\") + oldFileName;
 
-    CNewFileNameDlg dlg(this, oldFileName);
-    if (dlg.DoModal() != IDOK)
-        return;
+	CNewFileNameDlg dlg(this, oldFileName);
+	if (dlg.DoModal() != IDOK)
+		return;
 
-    CString newFullPath = _Directory + _T("\\") + dlg.GetNewFileName();
+	CString newFullPath = _Directory + _T("\\") + dlg.GetNewFileName();
 
-    CWaitCursor wait;
+	CWaitCursor wait;
 
-    CommandWriter::writeRenameFile(oldFullPath, newFullPath);
+	CommandWriter::writeRenameFile(oldFullPath, newFullPath);
 
-    RunService();
-    UpdateFileListBox();
+	RunService();
+	UpdateFileListBox();
 }
 
 void CCopyWSRDlg::RunService()
@@ -528,6 +537,8 @@ void CCopyWSRDlg::OnBnClickedButtonBackup()
 
 	RunService();
 	UpdateFileListBox();
+
+	MessageBox(_T("Backup completed."), _T("Info"), MB_OK | MB_ICONINFORMATION);
 }
 
 void CCopyWSRDlg::OnBnClickedButtonRestore()
@@ -552,6 +563,8 @@ void CCopyWSRDlg::OnBnClickedButtonRestore()
 
 	RunService();
 	UpdateFileListBox();
+
+	MessageBox(_T("Restore completed."), _T("Info"), MB_OK | MB_ICONINFORMATION);
 }
 
 void CCopyWSRDlg::OnLvnItemchangedListFiles(NMHDR* pNMHDR, LRESULT* pResult)
@@ -571,17 +584,24 @@ void CCopyWSRDlg::OnLvnItemchangedListFiles(NMHDR* pNMHDR, LRESULT* pResult)
 
 BOOL CCopyWSRDlg::IsBackupFile(CString str)
 {
-	// if file ends with .wsrbackup 
+	// if file ends with .wsrbackup
 
 	int length = CString(BACKUP_FILE_EXTENSION).GetLength();
 	int pos = str.Right(length).CompareNoCase(BACKUP_FILE_EXTENSION);
-	
+
 	return pos == 0;
 }
 
 void CCopyWSRDlg::OnBnClickedButtonBrowse()
 {
 	// dirctory browse dialog defaulting to c:\windows\system32
+}
 
-	
+BOOL CCopyWSRDlg::DestroyWindow()
+{
+	CSettings settings;
+	settings.SetPath(_Directory);
+	settings.Save();
+
+	return CDialogEx::DestroyWindow();
 }

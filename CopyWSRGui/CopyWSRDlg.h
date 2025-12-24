@@ -3,7 +3,6 @@
 
 #pragma once
 
-
 // CCopyWSRDlg dialog
 class CCopyWSRDlg : public CDialogEx
 {
@@ -23,6 +22,7 @@ protected:
 	virtual BOOL OnInitDialog();
 	void UpdateTitleWithVersion();
 	virtual void DoDataExchange(CDataExchange* pDX);	// DDX/DDV support
+	virtual BOOL DestroyWindow();
 
 	// Generated message map functions
 	afx_msg void OnSysCommand(UINT nID, LPARAM lParam);
@@ -38,6 +38,7 @@ protected:
 	afx_msg void OnBnClickedButtonBackup();
 	afx_msg void OnBnClickedButtonRestore();
 	afx_msg void OnLvnItemchangedListFiles(NMHDR* pNMHDR, LRESULT* pResult);
+	afx_msg void OnBnClickedButtonBrowse();
 	DECLARE_MESSAGE_MAP()
 
 	void Sort();
@@ -58,7 +59,4 @@ private:
 	std::list< WIN32_FIND_DATA> _FileListData;
 	CButton _RestoreBtn;
 	SortBy _CurrentSort;
-	
-public:
-	afx_msg void OnBnClickedButtonBrowse();
 };
