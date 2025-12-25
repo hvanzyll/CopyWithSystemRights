@@ -54,6 +54,7 @@ BEGIN_MESSAGE_MAP(CCopyWSRDlg, CDialogEx)
 	ON_BN_CLICKED(IDC_BUTTON_RESTORE, &CCopyWSRDlg::OnBnClickedButtonRestore)
 	ON_NOTIFY(LVN_ITEMCHANGED, IDC_LIST_FILES, &CCopyWSRDlg::OnLvnItemchangedListFiles)
 	ON_BN_CLICKED(IDC_BUTTON_BROWSE, &CCopyWSRDlg::OnBnClickedButtonBrowse)
+	ON_WM_SIZING()
 END_MESSAGE_MAP()
 
 // CCopyWSRDlg message handlers
@@ -91,6 +92,11 @@ BOOL CCopyWSRDlg::OnInitDialog()
 	pList->InsertColumn(DATE_COLUMN_INDEX, _T("Date/Time"), LVCFMT_RIGHT, 200);
 
 	UpdateFileListBox();
+
+	CRect rect;
+	GetWindowRect(&rect);
+	_UIMinSize.cx = rect.Width();
+	_UIMinSize.cy = rect.Height();
 
 	return TRUE;  // return TRUE  unless you set the focus to a control
 }
@@ -604,4 +610,15 @@ BOOL CCopyWSRDlg::DestroyWindow()
 	settings.Save();
 
 	return CDialogEx::DestroyWindow();
+}
+void CCopyWSRDlg::OnSizing(UINT fwSide, LPRECT pRect)
+{
+	// ensure the dialog does not get smaller than the minimum size
+	if (pRect->right - pRect->left < _UIMinSize.cx)
+		pRect->right = pRect->left + _UIMinSize.cx;
+
+	if (pRect->bottom - pRect->top < _UIMinSize.cy)
+		pRect->bottom = pRect->top + _UIMinSize.cy;
+
+	CDialogEx::OnSizing(fwSide, pRect);
 }

@@ -50,6 +50,7 @@ protected:
 	void AddEntry(WIN32_FIND_DATA& findData);
 	void RunService();
 	BOOL IsBackupFile(CString str);
+	CSize _UIMinSize;
 
 private:
 	// Variables
@@ -59,4 +60,6 @@ private:
 	std::list< WIN32_FIND_DATA> _FileListData;
 	CButton _RestoreBtn;
 	SortBy _CurrentSort;
+public:
+	afx_msg void OnSizing(UINT fwSide, LPRECT pRect);
 };
